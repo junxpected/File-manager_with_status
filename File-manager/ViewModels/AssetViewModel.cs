@@ -3,6 +3,9 @@ using File_manager.Models;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
+using System.Linq;
+using System.Windows.Media.Animation;
+using System.Windows;
 
 
 namespace File_manager.ViewModels
@@ -32,7 +35,31 @@ namespace File_manager.ViewModels
 
         private void HandleFileChange(FileSystemEventArgs e)
         {
-            
+            var existing = Assets.FirstOrDefault(a => a.FullPath == e.FullPath);
+            if (existing == null)
+            {
+                var newAsset = new MediaAsset { FullPath = e.FullPath };
+                Assets.Add(newAsset);
+            }
+            else
+            {
+                var info = new FileInfo(e.FullPath);
+                existing.Status = _evaluator.CalculateStatus(info, existing.Baseline);
+            }
+        }
+
+        private void DeleteAsset(IAsset asset)
+        {
+            if (asset.Status == FileStatus.New)
+            {
+                var result = MessageBox.Show($"Ви Впевнені що хочете видалити файл? {asset.FullPath}?", "Підтвередження", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Yes)
+                Assets.Remove(asset);
+            }
+            else
+            {
+                MessageBox.Show($"файл має статус: {asset.Status} і не може бути видалений");
+            }
         }
     }
 }
