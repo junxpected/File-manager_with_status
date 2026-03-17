@@ -10,6 +10,9 @@ on:
       - master
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -63,19 +66,28 @@ jobs:
           name: File-manager-publish
           path: release-artifact
 
-      - name: Create GitHub Release
+      - name: Package release artifact
+        run: |
+          powershell -Command "Compress-Archive -Path 'release-artifact/**' -DestinationPath 'release-artifact.zip' -Force"
+
+      - name: Create GitHub Release (using actions/create-release)
         id: create_release
-        uses: ncipollo/release-action@v1
+        uses: actions/create-release@v1
         with:
-          tag: v${{ github.run_number }}
-          name: "File-manager Release ${{ github.run_number }}"
+          tag_name: v${{ github.run_number }}
+          release_name: "File-manager Release ${{ github.run_number }}"
           body: "Automated release from workflow run ${{ github.run_id }}"
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+      - name: Upload released asset
+        uses: actions/upload-release-asset@v1
         with:
-          files: release-artifact/**
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-artifact.zip
+          asset_name: File-manager-publish.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
