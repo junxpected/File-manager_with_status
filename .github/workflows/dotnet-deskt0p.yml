@@ -46,28 +46,3 @@ jobs:
           name: File-manager-publish
           path: artifacts/publish
 
-  release:
-    needs: build
-    runs-on: windows-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download published artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: File-manager-publish
-          path: release-artifact
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: ncipollo/release-action@v1.21.0
-        with:
-          tag: v${{ github.run_number }}
-          name: "File-manager Release ${{ github.run_number }}"
-          body: "Automated release from workflow run ${{ github.run_id }}"
-          draft: false
-          prerelease: false
-          artifacts: release-artifact/**
