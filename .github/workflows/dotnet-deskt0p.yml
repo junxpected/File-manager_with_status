@@ -33,7 +33,7 @@ jobs:
         run: dotnet build "File-manager_with_status.sln" --configuration ${{ matrix.configuration }} --no-restore
 
       - name: Run tests
-        run: dotnet test "FIle_manager.Tests/File-manager.Tests.csproj" --configuration ${{ matrix.configuration }} --no-build --verbosity minimal
+        run: dotnet test "File-manager_with_status.sln" --configuration ${{ matrix.configuration }} --no-build --verbosity minimal
 
       - name: Publish artifacts (Release only)
         if: matrix.configuration == 'Release'
