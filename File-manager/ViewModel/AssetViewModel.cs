@@ -91,7 +91,7 @@ namespace File_manager.ViewModels
                             _repository.Save(a);
                     }, ct);
 
-                    // Потім додаємо в UI
+                    // Потім додаєм в UI
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         foreach (var a in toAdd)
@@ -136,7 +136,7 @@ namespace File_manager.ViewModels
             _debouncer.Debounce(e.FullPath, () => ProcessFileChange(e));
         }
 
-        
+
 
         private static readonly string[] _systemExtensions = { ".pek", ".tmp", ".bak", ".cache" };
 
@@ -148,9 +148,9 @@ namespace File_manager.ViewModels
             // IMG_4435.MOV 48000.pek → шукаємо IMG_4435.MOV
             var fileName = Path.GetFileName(fullPath);
             var parentName = fileName.Split(' ')[0]; // "IMG_4435.MOV"
-            
-            var parent = Assets.FirstOrDefault(a => 
-                Path.GetFileName(a.FullPath).Equals(parentName, 
+
+            var parent = Assets.FirstOrDefault(a =>
+                Path.GetFileName(a.FullPath).Equals(parentName,
                 StringComparison.OrdinalIgnoreCase));
 
             if (parent != null && parent.Status == FileStatus.New)
@@ -164,66 +164,66 @@ namespace File_manager.ViewModels
         }
         private void ProcessFileChange(FileSystemEventArgs e)
         {
-        if (IgnoreRules.ShouldIgnoreFile(Path.GetFileName(e.FullPath))) return;
-        var dirName = Path.GetFileName(Path.GetDirectoryName(e.FullPath) ?? "");
-        if (IgnoreRules.ShouldIgnoreDirectory(dirName, CurrentProjectType)) return;
+            if (IgnoreRules.ShouldIgnoreFile(Path.GetFileName(e.FullPath))) return;
+            var dirName = Path.GetFileName(Path.GetDirectoryName(e.FullPath) ?? "");
+            if (IgnoreRules.ShouldIgnoreDirectory(dirName, CurrentProjectType)) return;
 
-        Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
-        {
-            try
+            Application.Current?.Dispatcher.BeginInvoke(DispatcherPriority.Normal, () =>
             {
-                if (TryHandleSystemFile(e.FullPath)) return;
-
-                var existing = Assets.FirstOrDefault(a => a.FullPath == e.FullPath);
-
-                if (e.ChangeType == WatcherChangeTypes.Deleted)
+                try
                 {
-                    if (existing == null) return;
-                    if (existing.Status == FileStatus.New)
-                        Assets.Remove(existing);
-                    else
-                        existing.Status = FileStatus.Missing;
-                    _repository.Save(existing);
-                    _repository.Commit();
-                    return;
-                }
+                    if (TryHandleSystemFile(e.FullPath)) return;
 
-                if (existing == null)
-                {
-                    var info = new FileInfo(e.FullPath);
-                    if (!info.Exists) return;
-                    var baseline = new AssetMetadata
+                    var existing = Assets.FirstOrDefault(a => a.FullPath == e.FullPath);
+
+                    if (e.ChangeType == WatcherChangeTypes.Deleted)
                     {
-                        RegisteredTime = info.LastWriteTime,
-                        RegisteredSize = info.Length,
-                        FirstSeenTime = DateTime.Now
-                    };
-                    var newAsset = new MediaAsset
+                        if (existing == null) return;
+                        if (existing.Status == FileStatus.New)
+                            Assets.Remove(existing);
+                        else
+                            existing.Status = FileStatus.Missing;
+                        _repository.Save(existing);
+                        _repository.Commit();
+                        return;
+                    }
+
+                    if (existing == null)
                     {
-                        FullPath = e.FullPath,
-                        Baseline = baseline,
-                        Status = FileStatus.New,
-                        Comment = string.Empty
-                    };
-                    Assets.Add(newAsset);
-                    _repository.Save(newAsset);
-                    _repository.Commit();
-                }
-                else
-                {
-                    var info = new FileInfo(e.FullPath);
-                    if (!info.Exists)
-                        existing.Status = FileStatus.Missing;
+                        var info = new FileInfo(e.FullPath);
+                        if (!info.Exists) return;
+                        var baseline = new AssetMetadata
+                        {
+                            RegisteredTime = info.LastWriteTime,
+                            RegisteredSize = info.Length,
+                            FirstSeenTime = DateTime.Now
+                        };
+                        var newAsset = new MediaAsset
+                        {
+                            FullPath = e.FullPath,
+                            Baseline = baseline,
+                            Status = FileStatus.New,
+                            Comment = string.Empty
+                        };
+                        Assets.Add(newAsset);
+                        _repository.Save(newAsset);
+                        _repository.Commit();
+                    }
                     else
-                        existing.Status = _evaluator.ResolveStatus(
-                            info, existing.Baseline, existing.Status);
-                    _repository.Save(existing);
-                    _repository.Commit();
+                    {
+                        var info = new FileInfo(e.FullPath);
+                        if (!info.Exists)
+                            existing.Status = FileStatus.Missing;
+                        else
+                            existing.Status = _evaluator.ResolveStatus(
+                                info, existing.Baseline, existing.Status);
+                        _repository.Save(existing);
+                        _repository.Commit();
+                    }
                 }
-            }
-            catch { }
-        });
-    }
+                catch { }
+            });
+        }
 
         public void UpdateBaseline(IAsset asset)
         {

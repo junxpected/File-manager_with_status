@@ -20,11 +20,7 @@ namespace File_manager.Services
             _watcher = new FileSystemWatcher(path)
             {
                 IncludeSubdirectories = true,
-                NotifyFilter = NotifyFilters.FileName
-                                | NotifyFilters.DirectoryName
-                                | NotifyFilters.LastWrite
-                                | NotifyFilters.CreationTime
-                                | NotifyFilters.Size
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Size
             };
 
             _watcher.Created += OnCreated;
